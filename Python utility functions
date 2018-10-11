@@ -1,0 +1,6 @@
+
+## Convert Values From one Range to Other
+def get_new_range(val,OldMin,OldMax,NewMin,NewMax):
+    OldValue=val
+    NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
+    return min(np.round(NewValue,2),NewMax)
