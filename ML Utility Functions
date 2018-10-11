@@ -1,0 +1,109 @@
+ ## function to treat outliers
+def treat_outlier(data,col):
+    new_data=data.copy()
+    max_val=new_data[col].quantile(0.99)
+    min_val=new_data[col].quantile(0.01)
+    new_data[col]=[max_val if i>max_val else min_val if i<min_val else i for i in new_data[col]]
+    return new_data[col]
+    
+ ## function to calculate absolute percentage error
+def ape(actual,pred):
+    return np.abs(1-pred/actual)  
+    
+## function to get the probability of event class
+def get_prob(clf,dataset):
+    a=clf.predict_proba(dataset)
+    prob_0=a[:,0]
+    prob_1=a[:,1]
+    return prob_1
+
+
+## function for building confusion matrix 
+def build_conf_mat(clf_res):
+    clf_res.sort_values(['prob_1'],ascending=False,inplace=True)
+    clf_res['Predicted_Value']=0
+    clf_res.loc[0:142,'Predicted_Value']=1
+    df_confusion = pd.crosstab(clf_res['Lending'],clf_res['Predicted_Value'])
+    return df_confusion
+    
+## function to plot histogram
+def plot_hist(x,head):
+    plt.figure(figsize=(6,6))
+    plt.hist(x)
+    plt.title(head)
+    plt.xticks([0,1])
+    plt.xlabel('Lending')
+    plt.ylabel('Frequency')
+    plt.show()
+    
+## function for calculating events in each decile
+def deciles(clf_res,target):
+    decile=[]
+    q=clf_res.shape[0]//10
+    r=clf_res.shape[0]%10
+    
+    decile=[clf_res[target][(i*q+0):(i*q+q)].sum() for i in range(0,9) ]
+    
+    i=9
+    c=clf_res[target][(i*q+0) :(i*q+ (q+r))].sum()
+    decile.append(c)
+
+    return decile
+
+def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
+                        n_jobs=1,score='accuracy', train_sizes=np.linspace(.1, 1.0, 5)):
+   
+    plt.figure(figsize=(8,6))
+    plt.title(title)
+    if ylim is not None:
+        plt.ylim(*ylim)
+    plt.xlabel("Training examples")
+    plt.ylabel("Score")
+    train_sizes, train_scores, test_scores = learning_curve(
+        estimator, X, y, cv=cv, n_jobs=n_jobs,scoring=score,train_sizes=train_sizes)
+    train_scores_mean = np.mean(train_scores, axis=1)
+    train_scores_std = np.std(train_scores, axis=1)
+    test_scores_mean = np.mean(test_scores, axis=1)
+    test_scores_std = np.std(test_scores, axis=1)
+    plt.grid()
+
+    plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
+                     train_scores_mean + train_scores_std, alpha=0.1,
+                     color="r")
+    plt.fill_between(train_sizes, test_scores_mean - test_scores_std,
+                     test_scores_mean + test_scores_std, alpha=0.1, color="g")
+    plt.plot(train_sizes, train_scores_mean, 'o-', color="r",
+             label="Training score")
+    plt.plot(train_sizes, test_scores_mean, 'o-', color="g",
+             label="Cross-validation score")
+
+    plt.legend(loc="best")
+    return plt
+    
+##function to perform parameter tuning using GridSearch Cross Validation Method
+def param_tune(clf,train_X,train_y,params,score):
+    grid=GridSearchCV(clf,param_grid=params,scoring=score,cv=3)
+    grid.fit(train_X,train_y)
+    score=grid.best_score_
+    best_param=grid.best_params_
+    return grid.grid_scores_,score,best_param
+
+## function to plot variable importance
+def plot_importance(var,imp):
+    plt.figure(figsize=(8,6))
+    plt.barh(range(len(var)),imp,align='center')
+    plt.yticks(range(len(var)),var)
+    plt.xlabel('Importance of features')
+    plt.ylabel('Features')
+    plt.show()
+
+## function o set cutoff for prediction
+def cutoff_predict(clf,X,cutoff):
+    return (clf.predict_proba(X)[:,1]>cutoff).astype(int)
+
+## function to calculate f1 score based on cutoff
+def custom_f1(cutoff):
+    def f1_cutoff(clf,X,y):
+        ypred=cutoff_predict(clf,X,cutoff)
+        return f1_score(y,ypred)
+    return f1_cutoff    
