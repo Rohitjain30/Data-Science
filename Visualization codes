@@ -1,0 +1,47 @@
+## function to add data to plot
+def annot_plot(ax,w,h):
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    for p in ax.patches:
+        ax.annotate('{}'.format(p.get_height()), (p.get_x()+w, p.get_height()+h))
+
+## countplot example
+ax=sns.countplot('season',data=match_data,palette="Set2")
+plt.ylabel('Matches')
+annot_plot(ax,0.08,1)
+
+
+## horizontal bar example
+match_data.groupby('winner')['winner'].agg(['count']).sort_values('count').reset_index().plot(x='winner',y='count',kind='barh')
+
+
+
+##Pie chart example
+match=match_data.win_by.value_counts()
+labels=np.array(match.index)
+sizes = match.values
+colors = ['gold', 'lightskyblue']
+ 
+# Plot
+plt.pie(sizes, labels=labels, colors=colors,
+        autopct='%1.1f%%', shadow=True,startangle=90)
+
+plt.title('Match Result')
+plt.axis('equal')
+plt.show()
+
+## Subplot Example
+plt.figure(figsize=(12,8))
+plt.subplot(1,2,1)
+ax1=sns.countplot('user_rating',data=free_apps,palette="Set2")
+plt.title('Free Apps Rating')
+plt.xlabel('User Rating')
+plt.ylabel('Free Apps')
+annot_plot(ax1,0.05,1)
+
+plt.subplot(1,2,2)
+ax2=sns.countplot('user_rating',data=paid_apps,palette="Set2")
+plt.title('Paid Apps Rating')
+plt.xlabel('User Rating')
+plt.ylabel('Paid Apps')
+annot_plot(ax2,0.05,1)
