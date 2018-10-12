@@ -107,3 +107,8 @@ def custom_f1(cutoff):
         ypred=cutoff_predict(clf,X,cutoff)
         return f1_score(y,ypred)
     return f1_cutoff    
+
+
+##function to split data frames
+def split_df(df,n):
+    return df[:n].copy(),df[n:].copy()
