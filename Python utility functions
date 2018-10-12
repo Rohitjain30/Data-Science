@@ -4,3 +4,8 @@ def get_new_range(val,OldMin,OldMax,NewMin,NewMax):
     OldValue=val
     NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
     return min(np.round(NewValue,2),NewMax)
+    
+## function to generate all combinations    
+def generate_all_comb(l,cols):
+    test_data=pd.DataFrame(list(itertools.product(*l)),columns=cols)
+    return test_data    
