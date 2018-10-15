@@ -1,0 +1,71 @@
+# Setup code. Make sure you run this first!
+
+import os
+import random
+import math
+
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+import tensorflow as tf
+from tensorflow import keras
+from keras.layers import Dense,Flatten,Embedding,Input
+from keras.models import Model
+
+from learntools.core import binder; binder.bind(globals())
+from learntools.embeddings.ex1_embedding_layers import *
+
+input_dir = '../input'
+
+# Load a 10% subset of the full MovieLens data.
+df = pd.read_csv(os.path.join(input_dir, 'mini_rating.csv'))
+
+# Some hyperparameters. (You might want to play with these later)
+LR = .005 # Learning rate
+EPOCHS = 8 # Default number of training epochs (i.e. cycles through the training data)
+hidden_units = (32,4) # Size of our hidden layers
+
+def build_and_train_model(movie_embedding_size=8, user_embedding_size=8, verbose=2, epochs=EPOCHS):
+    tf.set_random_seed(1); np.random.seed(1); random.seed(1) # Set seeds for reproducibility
+
+    user_id_input = keras.Input(shape=(1,), name='user_id')
+    movie_id_input = keras.Input(shape=(1,), name='movie_id')
+    user_embedded = keras.layers.Embedding(df.userId.max()+1, user_embedding_size, 
+                                           input_length=1, name='user_embedding')(user_id_input)
+    movie_embedded = keras.layers.Embedding(df.movieId.max()+1, movie_embedding_size, 
+                                            input_length=1, name='movie_embedding')(movie_id_input)
+    concatenated = keras.layers.Concatenate()([user_embedded, movie_embedded])
+    out = keras.layers.Flatten()(concatenated)
+
+    # Add one or more hidden layers
+    for n_hidden in hidden_units:
+        out = keras.layers.Dense(n_hidden, activation='relu')(out)
+
+    # A single output: our predicted rating
+    out = keras.layers.Dense(1, activation='linear', name='prediction')(out)
+
+    model = keras.Model(
+        inputs = [user_id_input, movie_id_input],
+        outputs = out,
+    )
+    model.compile(
+        tf.train.AdamOptimizer(LR),
+        loss='MSE',
+        metrics=['MAE'],
+    )
+    history = model.fit(
+        [df.userId, df.movieId],
+        df.y,
+        batch_size=5 * 10**3,
+        epochs=epochs,
+        verbose=verbose,
+        validation_split=.05,
+    )
+    return history
+
+# Train two models with different embedding sizes and save the training statistics.
+# We'll be using this later in the exercise.
+history_8 = build_and_train_model(verbose=0)
+history_32 = build_and_train_model(32, 32, verbose=0)
+
+print("Setup complete!")
