@@ -69,3 +69,38 @@ history_8 = build_and_train_model(verbose=0)
 history_32 = build_and_train_model(32, 32, verbose=0)
 
 print("Setup complete!")
+
+
+
+history_FS = (15, 5)
+def plot_history(histories, keys=('mean_absolute_error','loss'), train=True, figsize=history_FS):
+    if isinstance(histories, tf.keras.callbacks.History):
+        histories = [ ('', histories) ]
+    for key in keys:
+        plt.figure(figsize=history_FS)
+        for name, history in histories:
+            val = plt.plot(history.epoch, history.history['val_'+key],
+                           '--', label=str(name).title()+' Val')
+            if train:
+                plt.plot(history.epoch, history.history[key], color=val[0].get_color(), alpha=.5,
+                         label=str(name).title()+' Train')
+
+        plt.xlabel('Epochs')
+        plt.ylabel(key.replace('_',' ').title())
+        plt.legend()
+        plt.title(key)
+
+        plt.xlim([0,max(max(history.epoch) for (_, history) in histories)])
+
+plot_history([ 
+    ('base model', history_8),
+])
+
+plot_history([ 
+    ('base model', history_32),
+])
+
+plot_history([ 
+    ('8-d embeddings', history_8),
+    ('32-d embeddings', history_32),
+])
