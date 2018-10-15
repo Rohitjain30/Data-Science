@@ -104,3 +104,8 @@ plot_history([
     ('8-d embeddings', history_8),
     ('32-d embeddings', history_32),
 ])
+
+## How to get any layer and its weights
+bias_layer = model_bias.get_layer('bias')
+
+(b,) = bias_layer.get_weights()
